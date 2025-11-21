@@ -1,5 +1,5 @@
 import { db } from './firebaseConfig';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
 
 export const createReport = async (userId, reportData) => {
   try {
@@ -18,6 +18,30 @@ export const createReport = async (userId, reportData) => {
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error("Error adding report: ", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const getUserReports = async (userId) => {
+  try {
+    // Query reports where userId matches the current user
+    const q = query(
+      collection(db, 'reports'), 
+      where('userId', '==', userId)
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    // Convert to array and sort by date (newest first)
+    // Note: We sort in JS to avoid needing a Firestore composite index right now
+    const reports = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })).sort((a, b) => b.createdAt - a.createdAt);
+
+    return { success: true, data: reports };
+  } catch (error) {
+    console.error("Error fetching reports:", error);
     return { success: false, error: error.message };
   }
 };
