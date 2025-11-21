@@ -8,9 +8,12 @@ export default function HomeScreen({ navigation }) {
       <Text style={styles.subtitle}>What would you like to do today?</Text>
       
       <View style={styles.cardContainer}>
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>📢 Report an Issue</Text>
-          <Text style={styles.cardDesc}>Garbage, streetlights, etc.</Text>
+        <TouchableOpacity 
+        style={styles.card}
+        onPress={() => navigation.navigate('ReportForm')} // <--- ADD THIS
+        >
+        <Text style={styles.cardTitle}>📢 Report an Issue</Text>
+        <Text style={styles.cardDesc}>Garbage, streetlights, etc.</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.card}>

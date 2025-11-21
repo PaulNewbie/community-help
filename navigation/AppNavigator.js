@@ -13,6 +13,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
+import ReportFormScreen from '../screens/ReportFormScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -91,17 +92,25 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          // Detect Role: If admin -> AdminTabs, else -> CitizenTabs
           user.role === 'admin' ? (
             <Stack.Screen name="AdminRoot" component={AdminTabs} />
           ) : (
-            <Stack.Screen name="CitizenRoot" component={CitizenTabs} />
+            // Group Citizen routes
+            <Stack.Group> 
+              <Stack.Screen name="CitizenRoot" component={CitizenTabs} />
+              {/* Add ReportForm here so it can be accessed from CitizenTabs */}
+              <Stack.Screen 
+                name="ReportForm" 
+                component={ReportFormScreen} 
+                options={{ headerShown: true, title: 'Report Issue' }} // Show header for back button
+              />
+            </Stack.Group>
           )
         ) : (
-          // Auth Flow
+          // ... Auth screens ...
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
           </>
         )}
       </Stack.Navigator>
