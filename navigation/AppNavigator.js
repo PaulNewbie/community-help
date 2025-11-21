@@ -1,39 +1,84 @@
 import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons'; // Icons for tabs
+
 import { onAuthChange, getUserData } from '../services/authService';
 
-// Import screens
+// Import Screens
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import HomeScreen from '../screens/HomeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
+// 1. Citizen Tab Navigator
+function CitizenTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#3498db',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Community Help' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// 2. Admin Tab Navigator
+function AdminTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Dashboard') iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#e67e22', // Different color for admins
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen name="Dashboard" component={AdminDashboardScreen} options={{ title: 'Admin Panel' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// 3. Main Root Navigator
 export default function AppNavigator() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes
     const unsubscribe = onAuthChange(async (authUser) => {
       if (authUser) {
-        // User is logged in, fetch their role from Firestore
         const result = await getUserData(authUser.uid);
         if (result.success) {
           setUser({ ...authUser, ...result.data });
         }
       } else {
-        // User is logged out
         setUser(null);
       }
       setLoading(false);
     });
-
-    return unsubscribe; // Cleanup listener on unmount
+    return unsubscribe;
   }, []);
 
-  // Show loading spinner while checking auth state
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -44,61 +89,22 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      {user ? (
-        // User is logged in - we'll add HomeScreen later
-        <Stack.Navigator>
-          <Stack.Screen 
-            name="Home" 
-            component={PlaceholderHomeScreen}
-            options={{ title: 'Community Help' }}
-          />
-        </Stack.Navigator>
-      ) : (
-        // User is NOT logged in - show auth screens
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-        </Stack.Navigator>
-      )}
-    </NavigationContainer>
-  );
-}
-
-// Temporary placeholder - we'll replace this with real HomeScreen next
-function PlaceholderHomeScreen() {
-  const [loading, setLoading] = useState(false);
-
-  const handleLogout = async () => {
-    setLoading(true);
-    const { logoutUser } = require('../services/authService');
-    const result = await logoutUser();
-    setLoading(false);
-    
-    if (!result.success) {
-      Alert.alert('Logout Failed', result.error);
-    }
-  };
-
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-      <Text style={{ fontSize: 24, marginBottom: 20 }}>Welcome! You're logged in!</Text>
-      <TouchableOpacity
-        style={{
-          backgroundColor: '#e74c3c',
-          padding: 15,
-          borderRadius: 10,
-          width: 200,
-          alignItems: 'center'
-        }}
-        onPress={handleLogout}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          // Detect Role: If admin -> AdminTabs, else -> CitizenTabs
+          user.role === 'admin' ? (
+            <Stack.Screen name="AdminRoot" component={AdminTabs} />
+          ) : (
+            <Stack.Screen name="CitizenRoot" component={CitizenTabs} />
+          )
         ) : (
-          <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Logout</Text>
+          // Auth Flow
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
         )}
-      </TouchableOpacity>
-    </View>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
