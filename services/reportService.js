@@ -1,5 +1,5 @@
 import { db } from './firebaseConfig';
-import { collection, addDoc, Timestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
 
 export const createReport = async (userId, reportData) => {
   try {
@@ -65,6 +65,21 @@ export const getAllReports = async () => {
     return { success: true, data: reports };
   } catch (error) {
     console.error("Error fetching all reports:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateReportStatus = async (reportId, newStatus, adminNotes) => {
+  try {
+    const reportRef = doc(db, "reports", reportId);
+    await updateDoc(reportRef, {
+      status: newStatus,
+      adminNotes: adminNotes || "",
+      updatedAt: Timestamp.now()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating report:", error);
     return { success: false, error: error.message };
   }
 };

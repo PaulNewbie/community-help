@@ -12,10 +12,13 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import ReportFormScreen from '../screens/ReportFormScreen';
 import MyReportsScreen from '../screens/MyReportsScreen';
 import MapScreen from '../screens/MapScreen';
+
+// Admin Screens
+import AdminDashboardScreen from '../screens/AdminDashboardScreen';
+import AdminReportDetailScreen from '../screens/AdminReportDetailScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -98,21 +101,29 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           user.role === 'admin' ? (
-            <Stack.Screen name="AdminRoot" component={AdminTabs} />
+            // Admin Stack Group
+            <Stack.Group>
+              <Stack.Screen name="AdminRoot" component={AdminTabs} />
+              {/* Add the Detail Screen here so it sits on top of the tabs */}
+              <Stack.Screen 
+                name="AdminReportDetails" 
+                component={AdminReportDetailScreen} 
+                options={{ headerShown: true, title: 'Manage Report' }} 
+              />
+            </Stack.Group>
           ) : (
-            // Group Citizen routes
+            // Citizen Stack Group
             <Stack.Group> 
               <Stack.Screen name="CitizenRoot" component={CitizenTabs} />
-              {/* Add ReportForm here so it can be accessed from CitizenTabs */}
               <Stack.Screen 
                 name="ReportForm" 
                 component={ReportFormScreen} 
-                options={{ headerShown: true, title: 'Report Issue' }} // Show header for back button
+                options={{ headerShown: true, title: 'Report Issue' }} 
               />
             </Stack.Group>
           )
         ) : (
-          // ... Auth screens ...
+          // Auth Stack
           <>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
