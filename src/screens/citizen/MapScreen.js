@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, Image } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAllReports } from '../services/reportService';
+import { getAllReports } from '../../services/reportService';
 
 export default function MapScreen() {
   const [reports, setReports] = useState([]);

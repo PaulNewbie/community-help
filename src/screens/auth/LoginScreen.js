@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { loginUser } from '../services/authService';
+import { loginUser } from '../../services/authService';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');

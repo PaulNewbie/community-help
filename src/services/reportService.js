@@ -1,4 +1,4 @@
-import { db } from './firebaseConfig';
+import { db } from '../config/firebaseConfig';
 import { collection, addDoc, Timestamp, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
 
 export const createReport = async (userId, reportData) => {

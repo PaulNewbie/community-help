@@ -4,8 +4,8 @@ import {
   ActivityIndicator, RefreshControl, TouchableOpacity 
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { auth } from '../services/firebaseConfig';
-import { getUserReports } from '../services/reportService';
+import { auth } from '../../config/firebaseConfig';
+import { getUserReports } from '../../services/reportService';
 
 export default function MyReportsScreen() {
   const [reports, setReports] = useState([]);

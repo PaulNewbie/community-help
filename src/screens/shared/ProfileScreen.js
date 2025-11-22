@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { logoutUser } from '../services/authService';
+import { logoutUser } from '../../services/authService';
 
 export default function ProfileScreen() {
   const handleLogout = async () => {

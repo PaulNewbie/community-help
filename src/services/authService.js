@@ -5,7 +5,7 @@ import {
   onAuthStateChanged 
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
+import { auth, db } from '../config/firebaseConfig';
 
 // Debug: Check if auth is defined
 console.log('🔍 AuthService - auth object:', auth);

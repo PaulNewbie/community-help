@@ -11,7 +11,7 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import { registerUser } from '../services/authService';
+import { registerUser } from '../../services/authService';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');

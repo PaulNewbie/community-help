@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl 
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAllReports } from '../services/reportService';
+import { getAllReports } from '../../services/reportService';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AdminDashboardScreen({ navigation }) {

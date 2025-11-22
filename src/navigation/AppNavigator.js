@@ -7,18 +7,23 @@ import { Ionicons } from '@expo/vector-icons'; // Icons for tabs
 
 import { onAuthChange, getUserData } from '../services/authService';
 
-// Import Screens
-import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import HomeScreen from '../screens/HomeScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import ReportFormScreen from '../screens/ReportFormScreen';
-import MyReportsScreen from '../screens/MyReportsScreen';
-import MapScreen from '../screens/MapScreen';
+// Auth Screens
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+
+// Citizen Screens
+import HomeScreen from '../screens/citizen/HomeScreen';
+import ProfileScreen from '../screens/shared/ProfileScreen'; // Note: Shared folder
+import ReportFormScreen from '../screens/citizen/ReportFormScreen';
+import MyReportsScreen from '../screens/citizen/MyReportsScreen';
+import MapScreen from '../screens/citizen/MapScreen';
 
 // Admin Screens
-import AdminDashboardScreen from '../screens/AdminDashboardScreen';
-import AdminReportDetailScreen from '../screens/AdminReportDetailScreen';
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import AdminReportDetailScreen from '../screens/admin/AdminReportDetailScreen';
+
+// Shared Details
+// import ReportDetailsScreen from '../screens/shared/ReportDetailsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

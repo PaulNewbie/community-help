@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location'; // Import Location
-import { uploadImageToCloudinary } from '../services/cloudinaryService';
-import { createReport } from '../services/reportService';
-import { auth } from '../services/firebaseConfig';
+import { uploadImageToCloudinary } from '../../services/cloudinaryService';
+import { createReport } from '../../services/reportService';
+import { auth } from '../../config/firebaseConfig';
 
 export default function ReportFormScreen({ navigation }) {
   const [title, setTitle] = useState('');

@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Image, TextInput, 
   TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform 
 } from 'react-native';
-import { updateReportStatus } from '../services/reportService';
+import { updateReportStatus } from '../../services/reportService';
 
 export default function AdminReportDetailScreen({ route, navigation }) {
   const { report } = route.params;
