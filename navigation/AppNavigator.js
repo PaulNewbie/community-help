@@ -15,6 +15,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import ReportFormScreen from '../screens/ReportFormScreen';
 import MyReportsScreen from '../screens/MyReportsScreen';
+import MapScreen from '../screens/MapScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +37,7 @@ function CitizenTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Community Help' }} />
+      <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="My Reports" component={MyReportsScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

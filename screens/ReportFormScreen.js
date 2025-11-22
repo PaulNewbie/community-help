@@ -4,73 +4,97 @@ import {
   Image, ScrollView, Alert, ActivityIndicator 
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location'; // Import Location
 import { uploadImageToCloudinary } from '../services/cloudinaryService';
 import { createReport } from '../services/reportService';
-import { auth } from '../services/firebaseConfig'; // To get current user ID
+import { auth } from '../services/firebaseConfig';
 
 export default function ReportFormScreen({ navigation }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [locationText, setLocationText] = useState('');
+  const [coords, setCoords] = useState(null); // Store GPS coordinates
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
 
-  // 1. Pick Image Function
   const pickImage = async () => {
-    // Request permission
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
       Alert.alert("Permission required", "You need to allow access to photos.");
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'], // Updated: use an array of media types
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.5, // Compress image slightly
+      quality: 0.5,
     });
-
     if (!result.canceled) {
       setImage(result.assets[0].uri);
     }
   };
 
-  // 2. Submit Function
+  // NEW: Function to get GPS Location
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access location was denied');
+        setLocationLoading(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setCoords({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+      
+      // Optional: Reverse geocode to get street address automatically
+      let address = await Location.reverseGeocodeAsync(location.coords);
+      if (address.length > 0) {
+        const addr = address[0];
+        setLocationText(`${addr.street || ''} ${addr.name || ''}, ${addr.city || ''}`);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Could not fetch location');
+    }
+    setLocationLoading(false);
+  };
+
   const handleSubmit = async () => {
-    if (!title || !description || !location || !image) {
-      Alert.alert("Missing Info", "Please fill all fields and add a photo.");
+    if (!title || !description || !image || !coords) {
+      Alert.alert("Missing Info", "Please fill fields, add photo, and GET LOCATION.");
       return;
     }
 
     setLoading(true);
 
-    // Step A: Upload Image
     const imageUrl = await uploadImageToCloudinary(image);
     if (!imageUrl) {
       setLoading(false);
-      Alert.alert("Error", "Failed to upload image. Please try again.");
+      Alert.alert("Error", "Failed to upload image.");
       return;
     }
 
-    // Step B: Save Report to Firestore
     const user = auth.currentUser;
     const reportData = {
       title,
       description,
-      category: "General", // Hardcoded for now, can add a dropdown later
-      location,
+      category: "General",
+      location: locationText,
+      latitude: coords.latitude,   // Save Latitude
+      longitude: coords.longitude, // Save Longitude
       imageUrl
     };
 
     const result = await createReport(user.uid, reportData);
-
     setLoading(false);
 
     if (result.success) {
-      Alert.alert("Success", "Report submitted successfully!", [
-        { text: "OK", onPress: () => navigation.goBack() }
-      ]);
+      Alert.alert("Success", "Report submitted!", [{ text: "OK", onPress: () => navigation.goBack() }]);
     } else {
       Alert.alert("Error", result.error);
     }
@@ -80,7 +104,6 @@ export default function ReportFormScreen({ navigation }) {
     <ScrollView style={styles.container}>
       <Text style={styles.header}>New Report</Text>
 
-      {/* Image Picker */}
       <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
         {image ? (
           <Image source={{ uri: image }} style={styles.previewImage} />
@@ -92,20 +115,21 @@ export default function ReportFormScreen({ navigation }) {
       </TouchableOpacity>
 
       <Text style={styles.label}>Title</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="E.g., Broken Streetlight" 
-        value={title}
-        onChangeText={setTitle}
-      />
+      <TextInput style={styles.input} placeholder="Broken Streetlight" value={title} onChangeText={setTitle} />
 
       <Text style={styles.label}>Location</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="E.g., Main St. near 7-Eleven" 
-        value={location}
-        onChangeText={setLocation}
-      />
+      <View style={styles.locationRow}>
+        <TextInput 
+          style={[styles.input, { flex: 1, marginBottom: 0 }]} 
+          placeholder="Address" 
+          value={locationText}
+          onChangeText={setLocationText}
+        />
+        <TouchableOpacity style={styles.gpsButton} onPress={getCurrentLocation} disabled={locationLoading}>
+          {locationLoading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.gpsText}>📍 GPS</Text>}
+        </TouchableOpacity>
+      </View>
+      {coords && <Text style={styles.coordText}>Lat: {coords.latitude.toFixed(4)}, Long: {coords.longitude.toFixed(4)}</Text>}
 
       <Text style={styles.label}>Description</Text>
       <TextInput 
@@ -113,15 +137,10 @@ export default function ReportFormScreen({ navigation }) {
         placeholder="Describe the issue..." 
         value={description}
         onChangeText={setDescription}
-        multiline
-        numberOfLines={4}
+        multiline numberOfLines={4}
       />
 
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.buttonDisabled]} 
-        onPress={handleSubmit}
-        disabled={loading}
-      >
+      <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSubmit} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Submit Report</Text>}
       </TouchableOpacity>
     </ScrollView>
@@ -140,5 +159,11 @@ const styles = StyleSheet.create({
   previewImage: { width: '100%', height: 200, borderRadius: 10 },
   button: { backgroundColor: '#3498db', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10, marginBottom: 40 },
   buttonDisabled: { backgroundColor: '#95a5a6' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  
+  // New styles for location
+  locationRow: { flexDirection: 'row', gap: 10, marginBottom: 5 },
+  gpsButton: { backgroundColor: '#27ae60', padding: 12, borderRadius: 8, justifyContent: 'center' },
+  gpsText: { color: '#fff', fontWeight: 'bold' },
+  coordText: { fontSize: 12, color: '#7f8c8d', marginBottom: 15 }
 });

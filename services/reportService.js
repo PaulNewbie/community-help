@@ -1,5 +1,5 @@
 import { db } from './firebaseConfig';
-import { collection, addDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 export const createReport = async (userId, reportData) => {
   try {
@@ -10,6 +10,8 @@ export const createReport = async (userId, reportData) => {
       category: reportData.category,
       location: reportData.location, // string for now
       imageUrl: reportData.imageUrl,
+      latitude: reportData.latitude || null,
+      longitude: reportData.longitude || null,
       status: 'Pending', // Default status
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
@@ -42,6 +44,27 @@ export const getUserReports = async (userId) => {
     return { success: true, data: reports };
   } catch (error) {
     console.error("Error fetching reports:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const getAllReports = async () => {
+  try {
+    const q = query(
+      collection(db, 'reports'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    const reports = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return { success: true, data: reports };
+  } catch (error) {
+    console.error("Error fetching all reports:", error);
     return { success: false, error: error.message };
   }
 };
