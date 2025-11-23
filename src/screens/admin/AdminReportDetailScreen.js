@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, ScrollView, Image, TextInput, 
   TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform 
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; 
+import MapView, { Marker } from 'react-native-maps'; // <--- 1. IMPORT MAP COMPONENTS
 import { updateReportStatus } from '../../services/reportService';
 
 export default function AdminReportDetailScreen({ route, navigation }) {
@@ -53,9 +55,35 @@ export default function AdminReportDetailScreen({ route, navigation }) {
           <Text style={styles.title}>{report.title}</Text>
           <Text style={styles.date}>Reported on: {new Date(report.createdAt.seconds * 1000).toDateString()}</Text>
           
+          {/* <--- 2. EMBEDDED MAP SECTION ---> */}
           <View style={styles.section}>
             <Text style={styles.label}>📍 Location</Text>
             <Text style={styles.text}>{report.location}</Text>
+
+            {/* Show Map only if coordinates exist */}
+            {report.latitude && report.longitude ? (
+              <View style={styles.mapContainer}>
+                <MapView
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: report.latitude,
+                    longitude: report.longitude,
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  }}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: report.latitude,
+                      longitude: report.longitude,
+                    }}
+                    title={report.title}
+                  />
+                </MapView>
+              </View>
+            ) : (
+              <Text style={styles.noGpsText}>No GPS data available.</Text>
+            )}
           </View>
 
           <View style={styles.section}>
@@ -105,7 +133,24 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: '#888', marginBottom: 20 },
   section: { marginBottom: 15 },
   label: { fontSize: 14, fontWeight: 'bold', color: '#555', marginBottom: 5 },
-  text: { fontSize: 16, color: '#333', lineHeight: 22 },
+  text: { fontSize: 16, color: '#333', lineHeight: 22, marginBottom: 10 },
+  
+  // <--- 3. NEW MAP STYLES
+  mapContainer: {
+    height: 200, // Fixed height for the map
+    width: '100%',
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#ddd'
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  noGpsText: { fontStyle: 'italic', color: '#999', marginTop: 5 },
+
   divider: { height: 1, backgroundColor: '#eee', marginVertical: 20 },
   sectionHeader: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#2c3e50' },
   statusContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },

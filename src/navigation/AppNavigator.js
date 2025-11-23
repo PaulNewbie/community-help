@@ -23,7 +23,7 @@ import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminReportDetailScreen from '../screens/admin/AdminReportDetailScreen';
 
 // Shared Details
-// import ReportDetailsScreen from '../screens/shared/ReportDetailsScreen';
+import ReportDetailsScreen from '../screens/shared/ReportDetailsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -124,6 +124,11 @@ export default function AppNavigator() {
                 name="ReportForm" 
                 component={ReportFormScreen} 
                 options={{ headerShown: true, title: 'Report Issue' }} 
+              />
+              <Stack.Screen 
+                name="ReportDetails" 
+                component={ReportDetailsScreen} 
+                options={{ headerShown: true, title: 'Report Status' }} 
               />
             </Stack.Group>
           )

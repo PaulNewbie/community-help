@@ -33,6 +33,11 @@ export default function ReportDetailsScreen({ route }) {
           Reported on: {formatDate(report.createdAt)}
         </Text>
 
+        <Text style={styles.updateDate}>
+            {report.status === 'Resolved' ? 'Resolved on: ' : 'Last Update: '} 
+            {formatDate(report.updatedAt)}
+        </Text>
+
         <View style={styles.divider} />
 
         <Text style={styles.label}>📍 Location</Text>
@@ -66,5 +71,6 @@ const styles = StyleSheet.create({
   text: { fontSize: 16, color: '#333', lineHeight: 24, marginBottom: 20 },
   adminBox: { backgroundColor: '#f0f8ff', padding: 15, borderRadius: 10, marginTop: 10, borderLeftWidth: 4, borderLeftColor: '#3498db' },
   adminLabel: { fontWeight: 'bold', color: '#2980b9', marginBottom: 5 },
-  adminText: { color: '#34495e' }
+  adminText: { color: '#34495e' },
+  updateDate: { color: '#27ae60', fontWeight: '600', fontSize: 12, marginTop: 4}
 });

@@ -7,7 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { auth } from '../../config/firebaseConfig';
 import { getUserReports } from '../../services/reportService';
 
-export default function MyReportsScreen() {
+export default function MyReportsScreen({ navigation }) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,7 +44,10 @@ export default function MyReportsScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => navigation.navigate('ReportDetails', { report: item })}
+    >
       <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <View style={styles.headerRow}>
@@ -58,7 +61,7 @@ export default function MyReportsScreen() {
         </Text>
         <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
