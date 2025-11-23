@@ -22,6 +22,10 @@ import MapScreen from '../screens/citizen/MapScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminReportDetailScreen from '../screens/admin/AdminReportDetailScreen';
 
+// Worker Screens
+import WorkerDashboardScreen from '../screens/worker/WorkerDashboardScreen';
+import WorkerJobScreen from '../screens/worker/WorkerJobScreen';
+
 // Shared Details
 import ReportDetailsScreen from '../screens/shared/ReportDetailsScreen';
 
@@ -73,7 +77,28 @@ function AdminTabs() {
   );
 }
 
-// 3. Main Root Navigator
+// 3. Worker Tab Navigator
+function WorkerTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Jobs') iconName = focused ? 'briefcase' : 'briefcase-outline';
+          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#8e44ad', // Purple for Workers
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen name="Jobs" component={WorkerDashboardScreen} options={{ title: 'Job Queue' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// 4. Main Root Navigator
 export default function AppNavigator() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -105,35 +130,28 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
+          // ROUTING LOGIC BASED ON ROLE
           user.role === 'admin' ? (
-            // Admin Stack Group
             <Stack.Group>
               <Stack.Screen name="AdminRoot" component={AdminTabs} />
-              {/* Add the Detail Screen here so it sits on top of the tabs */}
-              <Stack.Screen 
-                name="AdminReportDetails" 
-                component={AdminReportDetailScreen} 
-                options={{ headerShown: true, title: 'Manage Report' }} 
-              />
+              <Stack.Screen name="AdminReportDetails" component={AdminReportDetailScreen} options={{ headerShown: true }} />
+            </Stack.Group>
+          ) : user.role === 'worker' ? (
+            // NEW WORKER GROUP
+            <Stack.Group>
+              <Stack.Screen name="WorkerRoot" component={WorkerTabs} />
+              <Stack.Screen name="WorkerJob" component={WorkerJobScreen} options={{ headerShown: true, title: 'Current Job' }} />
             </Stack.Group>
           ) : (
-            // Citizen Stack Group
+            // CITIZEN GROUP
             <Stack.Group> 
               <Stack.Screen name="CitizenRoot" component={CitizenTabs} />
-              <Stack.Screen 
-                name="ReportForm" 
-                component={ReportFormScreen} 
-                options={{ headerShown: true, title: 'Report Issue' }} 
-              />
-              <Stack.Screen 
-                name="ReportDetails" 
-                component={ReportDetailsScreen} 
-                options={{ headerShown: true, title: 'Report Status' }} 
-              />
+              <Stack.Screen name="ReportForm" component={ReportFormScreen} options={{ headerShown: true }} />
+              <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} options={{ headerShown: true }} />
             </Stack.Group>
           )
         ) : (
-          // Auth Stack
+          // AUTH STACK
           <>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />

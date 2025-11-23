@@ -37,9 +37,11 @@ export default function MyReportsScreen({ navigation }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Resolved': return '#27ae60'; // Green
+      case 'Resolved': return '#27ae60';    // Green
       case 'In Progress': return '#f39c12'; // Orange
-      default: return '#e74c3c'; // Red (Pending)
+      case 'Accepted': return '#3498db';    // Blue
+      case 'Rejected': return '#e74c3c';    // Red
+      default: return '#95a5a6';            // Grey (Pending)
     }
   };
 

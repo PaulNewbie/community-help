@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, Dimensions 
+  View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, ScrollView 
 } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps'; // <--- IMPORT MAP COMPONENTS
+import MapView, { Marker, Callout } from 'react-native-maps'; 
 import { useFocusEffect } from '@react-navigation/native';
 import { getAllReports } from '../../services/reportService';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,17 +13,19 @@ export default function AdminDashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filterStatus, setFilterStatus] = useState('All'); 
-  const [viewMode, setViewMode] = useState('list'); // <--- ADD VIEW MODE STATE ('list' or 'map')
+  const [viewMode, setViewMode] = useState('list'); 
 
   // Stats state
-  const [stats, setStats] = useState({ pending: 0, inProgress: 0, resolved: 0 });
+  const [stats, setStats] = useState({ 
+    pending: 0, accepted: 0, inProgress: 0, resolved: 0, rejected: 0 
+  });
 
-  // Default Map Region (Adjust to your preferred default location)
+  // 📍 UPDATED DEFAULT REGION: Marilao, Bulacan
   const [region, setRegion] = useState({
-    latitude: 14.5995, 
-    longitude: 120.9842,
-    latitudeDelta: 0.09,
-    longitudeDelta: 0.09,
+    latitude: 14.7566, 
+    longitude: 120.9466,
+    latitudeDelta: 0.05, // Zoomed in slightly for better city view
+    longitudeDelta: 0.05,
   });
 
   const fetchReports = async () => {
@@ -39,10 +41,13 @@ export default function AdminDashboardScreen({ navigation }) {
   };
 
   const calculateStats = (data) => {
-    const pending = data.filter(r => r.status === 'Pending').length;
-    const inProgress = data.filter(r => r.status === 'In Progress').length;
-    const resolved = data.filter(r => r.status === 'Resolved').length;
-    setStats({ pending, inProgress, resolved });
+    setStats({
+      pending: data.filter(r => r.status === 'Pending').length,
+      accepted: data.filter(r => r.status === 'Accepted').length,
+      inProgress: data.filter(r => r.status === 'In Progress').length,
+      resolved: data.filter(r => r.status === 'Resolved').length,
+      rejected: data.filter(r => r.status === 'Rejected').length,
+    });
   };
 
   const applyFilter = (data, status) => {
@@ -71,21 +76,21 @@ export default function AdminDashboardScreen({ navigation }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Resolved': return '#27ae60'; // Green
+      case 'Resolved': return '#27ae60';    // Green
       case 'In Progress': return '#f39c12'; // Orange
-      default: return '#e74c3c'; // Red
+      case 'Accepted': return '#3498db';    // Blue
+      case 'Rejected': return '#e74c3c';    // Red
+      default: return '#95a5a6';            // Grey (Pending)
     }
   };
 
-  // --- RENDER HELPERS ---
-
-  const renderStatBox = (label, count, color,qcKey) => (
+  const renderStatBox = (label, count, color, statusKey) => (
     <TouchableOpacity 
       style={[
         styles.statBox, 
-        { backgroundColor: color, opacity: filterStatus === qcKey || filterStatus === 'All' ? 1 : 0.5 }
+        { backgroundColor: color, opacity: filterStatus === statusKey || filterStatus === 'All' ? 1 : 0.5 }
       ]}
-      onPress={() => handleFilterPress(qcKey)}
+      onPress={() => handleFilterPress(statusKey)}
     >
       <Text style={styles.statNumber}>{count}</Text>
       <Text style={styles.statLabel}>{label}</Text>
@@ -113,15 +118,18 @@ export default function AdminDashboardScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {/* Header Stats */}
-      <View style={styles.statsContainer}>
-        {renderStatBox('Pending', stats.pending, '#fadbd8', 'Pending')}
-        {renderStatBox('In Progress', stats.inProgress, '#fdebd0', 'In Progress')}
-        {renderStatBox('Resolved', stats.resolved, '#d5f5e3', 'Resolved')}
+      <View style={styles.statsWrapper}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsContainer}>
+          {renderStatBox('Pending', stats.pending, '#fadbd8', 'Pending')}
+          {renderStatBox('Accepted', stats.accepted, '#ebf5fb', 'Accepted')}
+          {renderStatBox('Active', stats.inProgress, '#fdebd0', 'In Progress')}
+          {renderStatBox('Done', stats.resolved, '#d5f5e3', 'Resolved')}
+          {renderStatBox('Rejected', stats.rejected, '#eaecee', 'Rejected')}
+        </ScrollView>
       </View>
 
-      {/* Toggle & Filter Controls */}
+      {/* Controls */}
       <View style={styles.controlsRow}>
-        {/* View Mode Toggle */}
         <View style={styles.toggleContainer}>
           <TouchableOpacity 
             style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
@@ -137,7 +145,6 @@ export default function AdminDashboardScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Filter Reset */}
         {filterStatus !== 'All' && (
           <TouchableOpacity onPress={() => handleFilterPress('All')} style={styles.resetFilter}>
             <Text style={styles.resetText}>Show All ({reports.length})</Text>
@@ -145,11 +152,10 @@ export default function AdminDashboardScreen({ navigation }) {
         )}
       </View>
 
-      {/* CONTENT AREA */}
+      {/* Content */}
       {loading ? (
         <ActivityIndicator size="large" color="#3498db" style={{ marginTop: 50 }} />
       ) : viewMode === 'list' ? (
-        // --- LIST VIEW ---
         <FlatList
           data={filteredReports}
           keyExtractor={(item) => item.id}
@@ -159,22 +165,18 @@ export default function AdminDashboardScreen({ navigation }) {
           ListEmptyComponent={<Text style={styles.emptyText}>No reports found.</Text>}
         />
       ) : (
-        // --- MAP VIEW ---
         <View style={styles.mapContainer}>
           <MapView 
             style={styles.map} 
-            initialRegion={region}
+            initialRegion={region} // Uses the new Marilao region
             showsUserLocation={true}
           >
             {filteredReports.map((report) => (
               report.latitude && report.longitude ? (
                 <Marker
                   key={report.id}
-                  coordinate={{
-                    latitude: report.latitude,
-                    longitude: report.longitude
-                  }}
-                  pinColor={getStatusColor(report.status)} // Pin color matches status!
+                  coordinate={{ latitude: report.latitude, longitude: report.longitude }}
+                  pinColor={getStatusColor(report.status)}
                 >
                   <Callout onPress={() => navigation.navigate('AdminReportDetails', { report })}>
                     <View style={styles.callout}>
@@ -182,7 +184,6 @@ export default function AdminDashboardScreen({ navigation }) {
                       <Text style={[styles.calloutStatus, { color: getStatusColor(report.status) }]}>
                         {report.status}
                       </Text>
-                      <Text style={styles.calloutDesc}>Tap to manage</Text>
                     </View>
                   </Callout>
                 </Marker>
@@ -197,16 +198,17 @@ export default function AdminDashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', paddingTop: 10 },
-  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 15, marginBottom: 15 },
-  statBox: { width: '31%', padding: 15, borderRadius: 10, alignItems: 'center', elevation: 2 },
-  statNumber: { fontSize: 22, fontWeight: 'bold', color: '#333' },
-  statLabel: { fontSize: 12, color: '#555', marginTop: 2, textAlign: 'center' },
   
-  controlsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, marginBottom: 10 },
+  statsWrapper: { height: 90 },
+  statsContainer: { paddingHorizontal: 15, alignItems: 'center', gap: 10 },
+  statBox: { width: 100, height: 70, justifyContent: 'center', alignItems: 'center', borderRadius: 10, elevation: 2, marginRight: 5 },
+  statNumber: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  statLabel: { fontSize: 12, color: '#555', textAlign: 'center' },
+  
+  controlsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, marginBottom: 10, marginTop: 5 },
   toggleContainer: { flexDirection: 'row', backgroundColor: '#f0f0f0', borderRadius: 8, padding: 2 },
   toggleBtn: { padding: 8, borderRadius: 6, width: 40, alignItems: 'center' },
   toggleBtnActive: { backgroundColor: '#3498db' },
-  
   resetFilter: { paddingVertical: 5 },
   resetText: { color: '#3498db', fontWeight: '600' },
   
@@ -220,11 +222,9 @@ const styles = StyleSheet.create({
   cardLocation: { fontSize: 13, color: '#555' },
   emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
 
-  // Map Styles
   mapContainer: { flex: 1, borderRadius: 15, overflow: 'hidden', marginHorizontal: 15, marginBottom: 15 },
   map: { width: '100%', height: '100%' },
   callout: { width: 150, padding: 5, alignItems: 'center' },
   calloutTitle: { fontWeight: 'bold', marginBottom: 2 },
-  calloutStatus: { fontSize: 12, fontWeight: 'bold', marginBottom: 2 },
-  calloutDesc: { fontSize: 10, color: '#666' }
+  calloutStatus: { fontSize: 12, fontWeight: 'bold' }
 });

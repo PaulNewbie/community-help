@@ -69,14 +69,26 @@ export const getAllReports = async () => {
   }
 };
 
-export const updateReportStatus = async (reportId, newStatus, adminNotes) => {
+export const updateReportStatus = async (reportId, newStatus, additionalData = {}) => {
   try {
     const reportRef = doc(db, "reports", reportId);
-    await updateDoc(reportRef, {
+    
+    // Base update
+    const updateData = {
       status: newStatus,
-      adminNotes: adminNotes || "",
       updatedAt: Timestamp.now()
-    });
+    };
+
+    // Add specific fields if they are provided in additionalData
+    if (additionalData.adminNotes) updateData.adminNotes = additionalData.adminNotes;
+    if (additionalData.planNotes) updateData.planNotes = additionalData.planNotes;
+    if (additionalData.rejectionReason) updateData.rejectionReason = additionalData.rejectionReason;
+    
+    // Worker fields (for later)
+    if (additionalData.resolutionNotes) updateData.resolutionNotes = additionalData.resolutionNotes;
+    if (additionalData.resolutionImageUrl) updateData.resolutionImageUrl = additionalData.resolutionImageUrl;
+
+    await updateDoc(reportRef, updateData);
     return { success: true };
   } catch (error) {
     console.error("Error updating report:", error);
